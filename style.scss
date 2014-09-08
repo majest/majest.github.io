@@ -14,7 +14,7 @@
 /**************/
 
 html {
-  font-size: 100%;
+  font-size: 80%;
 }
 
 body {
@@ -23,9 +23,25 @@ body {
   color: $darkGray;
 }
 
+.left {
+  float:left;
+  max-width: 264px;
+  min-width:150px;
+  margin: 40px 10px 0px 0px;
+}
+
+.center {
+  float:left;
+  max-width: 760px;
+}
+
+.clear {
+  clear:both;
+}
+
 .container {
   margin: 0 auto;
-  max-width: 740px;
+  max-width: 1024px;
   padding: 0 10px;
   width: 100%;
 }
@@ -146,7 +162,7 @@ img {
 //
 
 .wrapper-masthead {
-  margin-bottom: 50px;
+  margin-bottom: 10px;
 }
 
 .masthead {
