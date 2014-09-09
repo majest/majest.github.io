@@ -9,6 +9,8 @@ Every day I get few emails with job offers from recruiters. Some of them are ok 
 
 This is why I started writing down all the recruitment company domains so I could add them to filter. Now I have one folder for them and it's nice to see my inbox clean and tidy while I'm on a lengthy contract.
 
-You can grab the list from here: https://gist.github.com/majest/7004390
+You can grab the list from here: [https://gist.github.com/majest/7004390][https://gist.github.com/majest/7004390]
 
 It's far from completion but gives a good coverage in London. Comments welcomed.
+
+[https://gist.github.com/majest/7004390]: https://gist.github.com/majest/7004390
