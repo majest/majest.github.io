@@ -1,19 +1,465 @@
----
-layout: default
----
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wonderful Things — made by Alan &amp; Adam</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A gallery of things Alan and Adam have built with Claude. Everything runs right in your browser.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..900,0..100,0..1&family=Karla:wght@400;500;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
 
-<div class="posts">
-  {% for post in site.posts %}
-    <article class="post">    
-      
-      <h1><a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></h1>
-      <span>{{ post.date | date: "%b %-d, %Y" }}</span>
-      
-      <div class="entry">
-        {{ post.content | truncatewords:40}}
+<style>
+/* ---------------------------------------------------------------
+   Wonderful Things — a riso-printed exhibition wall
+   Flat spot inks, overprinted with multiply, on warm newsprint.
+   --------------------------------------------------------------- */
+
+:root{
+  /* riso spot inks */
+  --pink:#FF48B0;
+  --blue:#0078BF;
+  --green:#00A95C;
+  --yellow:#FFC800;
+  --orange:#FF6C2F;
+
+  --paper:#FBF3E4;
+  --ink:#241D18;
+  --ink-2:#6B5D50;
+  --ink-3:#9C8B7A;
+  --rule:#DCCDB2;
+  --card:#FFFBF2;
+  --shadow:rgba(36,29,24,.20);
+  --blend:multiply;
+  --grain:.28;
+  --halftone:.10;
+  --blob-alpha:.34;
+
+  --display:'Fraunces','Hoefler Text',Georgia,'Times New Roman',serif;
+  --body:'Karla','Trebuchet MS','Helvetica Neue',Arial,sans-serif;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#181A23;
+    --ink:#F4ECDD;
+    --ink-2:#B0A899;
+    --ink-3:#7E786C;
+    --rule:#33374A;
+    --card:#20232E;
+    --shadow:rgba(0,0,0,.55);
+    --blend:screen;
+    --grain:.20;
+    --halftone:.16;
+    --blob-alpha:.20;
+  }
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+html{ -webkit-text-size-adjust:100%; overflow-x:clip }
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:clamp(16px,.55vw + 14.5px,18px);
+  line-height:1.6;
+  overflow-x:clip;
+  position:relative;
+}
+
+/* paper grain, sits above the background and below everything else */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none; z-index:9;
+  opacity:var(--grain);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+
+.wrap{ width:min(1180px,92vw); margin-inline:auto }
+
+a{ color:inherit }
+:focus-visible{ outline:3px solid var(--pink); outline-offset:3px; border-radius:4px }
+
+/* =================================================================
+   MASTHEAD
+   ================================================================= */
+
+.masthead{
+  position:relative;
+  padding:clamp(3.5rem,9vw,7rem) 0 clamp(2.5rem,5vw,4rem);
+  isolation:isolate;
+}
+
+/* overprinted ink blobs behind the title */
+.blobs{ position:absolute; inset:-30% -15% -10%; z-index:-1; pointer-events:none; filter:blur(70px) }
+.blob{
+  position:absolute; border-radius:50%;
+  mix-blend-mode:var(--blend);
+  opacity:var(--blob-alpha);
+  animation:float 22s ease-in-out infinite;
+}
+.blob.a{ width:30vw; height:30vw; left:-4%; top:18%; background:var(--yellow) }
+.blob.b{ width:24vw; height:24vw; left:24%; top:-6%; background:var(--pink);  animation-delay:-8s }
+.blob.c{ width:27vw; height:27vw; right:2%; top:24%; background:var(--blue);  animation-delay:-14s }
+.blob.d{ width:18vw; height:18vw; right:26%;top:-2%; background:var(--green); animation-delay:-4s }
+
+@keyframes float{
+  0%,100%{ transform:translate3d(0,0,0) scale(1) }
+  33%    { transform:translate3d(2.5vw,-1.6vw,0) scale(1.07) }
+  66%    { transform:translate3d(-1.8vw,1.9vw,0) scale(.95) }
+}
+
+.kicker{
+  margin:0 0 .4rem;
+  font-family:var(--body);
+  font-weight:700;
+  font-size:.8rem;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:var(--ink-2);
+}
+
+.masthead h1{
+  margin:0;
+  font-family:var(--display);
+  font-variation-settings:'SOFT' 60,'WONK' 1,'opsz' 144;
+  font-weight:900;
+  font-size:clamp(3.2rem,13vw,8.5rem);
+  line-height:.86;
+  letter-spacing:-.025em;
+  display:inline-block;
+  transform:rotate(-1.6deg);
+  /* the second plate, printed a hair out of register */
+  text-shadow:.055em .042em 0 var(--pink);
+}
+.masthead h1 em{
+  font-style:normal;
+  color:var(--green);
+  mix-blend-mode:var(--blend);
+}
+
+.lede{
+  max-width:44ch;
+  margin:1.6rem 0 0;
+  font-size:1.08rem;
+  color:var(--ink-2);
+}
+.lede strong{ color:var(--ink); font-weight:700 }
+
+/* torn-paper rule made of halftone dots */
+.halftone{
+  height:26px;
+  background-image:radial-gradient(circle at center, var(--ink) 1.6px, transparent 1.7px);
+  background-size:11px 11px;
+  opacity:var(--halftone);
+}
+
+/* =================================================================
+   A CHILD'S SECTION
+   ================================================================= */
+
+.shelf{ padding:clamp(2.5rem,5vw,4rem) 0 }
+
+.shelf-head{
+  display:flex; align-items:baseline; gap:1rem 1.1rem;
+  flex-wrap:wrap;
+  margin-bottom:2rem;
+}
+
+.badge{
+  font-family:var(--display);
+  font-variation-settings:'SOFT' 80,'WONK' 1,'opsz' 96;
+  font-weight:800;
+  font-size:clamp(1.9rem,5vw,2.9rem);
+  line-height:1;
+  padding:.34em .58em .40em;
+  border-radius:999px;
+  background:var(--ink-badge);
+  color:#FBF3E4;
+  transform:rotate(var(--tilt,-1.5deg));
+  box-shadow:4px 5px 0 var(--shadow);
+}
+
+.count{
+  font-size:.82rem; font-weight:700;
+  letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+
+.grid{
+  display:grid;
+  gap:clamp(1.4rem,2.6vw,2.2rem);
+  grid-template-columns:repeat(auto-fill,minmax(min(272px,100%),1fr));
+  /* With only a project or two, a full-width grid leaves a lot of nothing.
+     --cols is set to the number of cards, so the shelf stays snug. */
+  max-width:calc(var(--cols,3) * 23rem);
+}
+
+/* =================================================================
+   PROJECT CARD — a sheet pinned to the wall
+   ================================================================= */
+
+.card{
+  position:relative;
+  display:flex; flex-direction:column;
+  padding:1.6rem 1.5rem 1.4rem;
+  background:var(--card);
+  border:2px solid var(--ink);
+  border-radius:18px;
+  box-shadow:6px 7px 0 var(--ink-badge);
+  transform:rotate(var(--tilt));
+  transition:transform .28s cubic-bezier(.34,1.4,.5,1), box-shadow .28s ease;
+  animation:pin .55s cubic-bezier(.2,1.3,.4,1) backwards;
+  animation-delay:var(--delay,0ms);
+}
+@keyframes pin{
+  from{ opacity:0; transform:rotate(calc(var(--tilt) * 3)) translateY(26px) scale(.94) }
+  to  { opacity:1 }
+}
+
+.card:hover,.card:focus-within{
+  transform:rotate(0deg) translateY(-7px);
+  box-shadow:10px 13px 0 var(--ink-badge);
+}
+
+/* the emoji sticker, printed in the child's ink */
+.sticker{
+  width:64px; height:64px;
+  display:grid; place-items:center;
+  font-size:33px; line-height:1;
+  border-radius:50%;
+  background:var(--ink-badge);
+  border:2px solid var(--ink);
+  margin-bottom:1.1rem;
+  transform:rotate(calc(var(--tilt) * -2.2));
+  transition:transform .3s cubic-bezier(.34,1.5,.5,1);
+}
+.card:hover .sticker{ transform:rotate(0) scale(1.09) }
+
+.card h3{
+  margin:0 0 .5rem;
+  font-family:var(--display);
+  font-variation-settings:'SOFT' 60,'WONK' 1,'opsz' 72;
+  font-weight:800;
+  font-size:1.62rem;
+  line-height:1.05;
+  letter-spacing:-.015em;
+}
+
+.card p{
+  margin:0 0 1.4rem;
+  color:var(--ink-2);
+  font-size:.97rem;
+  line-height:1.55;
+  flex:1;
+}
+
+.actions{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap }
+
+.open{
+  font-weight:700; font-size:.95rem;
+  text-decoration:none;
+  padding:.5rem 1.05rem;
+  border:2px solid var(--ink);
+  border-radius:999px;
+  background:var(--yellow);
+  color:#241D18;
+  box-shadow:3px 3px 0 var(--ink);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.open span{ display:inline-block; transition:transform .22s cubic-bezier(.34,1.5,.5,1) }
+.card:hover .open span{ transform:translateX(4px) }
+.open:active{ transform:translate(3px,3px); box-shadow:0 0 0 var(--ink) }
+/* makes the whole card tappable without nesting links */
+.open::after{ content:""; position:absolute; inset:0; border-radius:18px }
+
+.code{
+  position:relative; z-index:2;
+  font-size:.82rem; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase;
+  color:var(--ink-3);
+  text-decoration:none;
+  border-bottom:2px solid var(--rule);
+  padding-bottom:1px;
+}
+.code:hover{ color:var(--ink); border-color:var(--pink) }
+
+/* =================================================================
+   EMPTY / LOADING / BROKEN STATES
+   ================================================================= */
+
+.note{
+  grid-column:1 / -1;
+  padding:2.4rem 2rem;
+  border:3px dashed var(--rule);
+  border-radius:18px;
+  text-align:center;
+  color:var(--ink-2);
+}
+.note .big{
+  display:block;
+  font-family:var(--display);
+  font-variation-settings:'SOFT' 80,'WONK' 1;
+  font-weight:800;
+  font-size:1.35rem;
+  color:var(--ink);
+  margin-bottom:.3rem;
+}
+.note .emo{ display:block; font-size:2.2rem; margin-bottom:.7rem }
+
+.skeleton{
+  height:212px; border-radius:18px;
+  border:2px dashed var(--rule);
+  opacity:.55;
+  animation:breathe 1.7s ease-in-out infinite;
+}
+.skeleton:nth-child(2){ animation-delay:.22s }
+.skeleton:nth-child(3){ animation-delay:.44s }
+@keyframes breathe{ 0%,100%{opacity:.30} 50%{opacity:.62} }
+
+/* =================================================================
+   FOOTER
+   ================================================================= */
+
+footer{
+  padding:3.5rem 0 4rem;
+  color:var(--ink-3);
+  font-size:.9rem;
+}
+footer .wrap{ display:flex; gap:.6rem 1.6rem; flex-wrap:wrap; align-items:center }
+footer a{ color:var(--ink-2); text-decoration:none; border-bottom:2px solid var(--rule) }
+footer a:hover{ color:var(--ink); border-color:var(--pink) }
+footer .dot{ color:var(--rule) }
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="blobs" aria-hidden="true">
+    <span class="blob a"></span><span class="blob b"></span>
+    <span class="blob c"></span><span class="blob d"></span>
+  </div>
+  <div class="wrap">
+    <p class="kicker">An exhibition of</p>
+    <h1>Wonderful <em>Things</em></h1>
+    <p class="lede">
+      <strong>Alan</strong> and <strong>Adam</strong> make these with Claude.
+      Every one of them runs right here in your browser — pick one and have a play.
+    </p>
+  </div>
+</header>
+
+<div class="halftone" aria-hidden="true"></div>
+
+<main id="wall" class="wrap"></main>
+
+<div class="halftone" aria-hidden="true"></div>
+
+<footer>
+  <div class="wrap">
+    <span>Built by Alan and Adam, with Claude.</span>
+    <span class="dot">✦</span>
+    <a href="https://github.com/majest/claude-alan">Alan's code</a>
+    <a href="https://github.com/majest/claude-adam">Adam's code</a>
+  </div>
+</footer>
+
+<script>
+/* -----------------------------------------------------------------
+   Each child's repo publishes its own list to its own Pages site,
+   on this same domain. So we can just read them — no keys, no CORS.
+   ----------------------------------------------------------------- */
+
+const MAKERS = [
+  { name:'Alan', repo:'claude-alan', ink:'var(--blue)'  },
+  { name:'Adam', repo:'claude-adam', ink:'var(--green)' },
+];
+
+const TILTS = [-1.4, 0.9, -0.6, 1.5, -1.1, 0.5];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => (
+  { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]
+));
+
+const wall = document.getElementById('wall');
+
+// Paint the shelves straight away, so the page has shape while we fetch.
+wall.innerHTML = MAKERS.map(m => `
+  <section class="shelf" id="shelf-${m.repo}" style="--ink-badge:${m.ink}">
+    <div class="shelf-head">
+      <span class="badge" style="--tilt:${m.name === 'Alan' ? '-1.8deg' : '1.6deg'}">${m.name}</span>
+      <span class="count" data-count>loading…</span>
+    </div>
+    <div class="grid" data-grid style="--cols:3">
+      <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+    </div>
+  </section>
+`).join('<div class="halftone" aria-hidden="true"></div>');
+
+function card(p, maker, i){
+  const tilt = TILTS[i % TILTS.length] + 'deg';
+  const source = `https://github.com/majest/${maker.repo}/tree/main/projects/${encodeURIComponent(p.slug)}`;
+  return `
+    <article class="card" style="--tilt:${tilt}; --delay:${i * 70}ms">
+      <div class="sticker" aria-hidden="true">${esc(p.emoji || '✨')}</div>
+      <h3>${esc(p.title || p.slug)}</h3>
+      <p>${esc(p.description || '')}</p>
+      <div class="actions">
+        <a class="open" href="${esc(p.url)}">Open it <span>→</span></a>
+        <a class="code" href="${esc(p.source || source)}">See the code</a>
       </div>
-      
-      <a href="{{ site.baseurl }}{{ post.url }}" class="read-more">Read More</a>
-    </article>
-  {% endfor %}
-</div>
+    </article>`;
+}
+
+function note(emo, big, small){
+  return `<div class="note"><span class="emo">${emo}</span>
+    <span class="big">${esc(big)}</span>${esc(small)}</div>`;
+}
+
+MAKERS.forEach(async maker => {
+  const shelf = document.getElementById('shelf-' + maker.repo);
+  const grid  = shelf.querySelector('[data-grid]');
+  const count = shelf.querySelector('[data-count]');
+
+  let projects = null;
+  try {
+    const res = await fetch(`${maker.repo}/projects.json`, { cache:'no-cache' });
+    if (res.ok) projects = (await res.json()).projects;
+  } catch (e) { /* offline, or the page isn't published yet */ }
+
+  if (!projects){
+    count.textContent = '';
+    grid.style.setProperty('--cols', 2);
+    grid.innerHTML = note('🚧', 'This page is still being built',
+      `${maker.name}'s projects will turn up here as soon as the first one is published.`);
+    return;
+  }
+  if (!projects.length){
+    count.textContent = 'nothing yet';
+    grid.style.setProperty('--cols', 2);
+    grid.innerHTML = note('🌱', 'Nothing here yet!',
+      `${maker.name} hasn't published a project yet. The first one is on its way.`);
+    return;
+  }
+
+  count.textContent = projects.length === 1 ? '1 project' : `${projects.length} projects`;
+  grid.style.setProperty('--cols', Math.min(projects.length, 4));
+  grid.innerHTML = projects.map((p, i) => card(p, maker, i)).join('');
+});
+</script>
+</body>
+</html>
