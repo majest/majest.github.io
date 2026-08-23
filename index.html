@@ -395,6 +395,15 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => (
   { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]
 ));
 
+/* projects.json is fetched at run time, so its urls are data, not code.
+   Anything that isn't a plain http(s) link — javascript:, data: — is dropped. */
+function safeUrl(u){
+  try {
+    const abs = new URL(String(u ?? ''), location.href);
+    return abs.protocol === 'https:' || abs.protocol === 'http:' ? abs.href : '#';
+  } catch { return '#'; }
+}
+
 const wall = document.getElementById('wall');
 
 // Paint the shelves straight away, so the page has shape while we fetch.
@@ -419,8 +428,8 @@ function card(p, maker, i){
       <h3>${esc(p.title || p.slug)}</h3>
       <p>${esc(p.description || '')}</p>
       <div class="actions">
-        <a class="open" href="${esc(p.url)}">Open it <span>→</span></a>
-        <a class="code" href="${esc(p.source || source)}">See the code</a>
+        <a class="open" href="${esc(safeUrl(p.url))}">Open it <span>→</span></a>
+        <a class="code" href="${esc(safeUrl(p.source || source))}">See the code</a>
       </div>
     </article>`;
 }
