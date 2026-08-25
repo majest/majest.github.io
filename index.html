@@ -229,18 +229,38 @@ a{ color:inherit }
   box-shadow:10px 13px 0 var(--ink-badge);
 }
 
+/* sticker on the left, date stamped opposite it */
+.card-top{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:.9rem; margin-bottom:1.1rem;
+}
+
 /* the emoji sticker, printed in the child's ink */
 .sticker{
-  width:64px; height:64px;
+  width:64px; height:64px; flex:none;
   display:grid; place-items:center;
   font-size:33px; line-height:1;
   border-radius:50%;
   background:var(--ink-badge);
   border:2px solid var(--ink);
-  margin-bottom:1.1rem;
   transform:rotate(calc(var(--tilt) * -2.2));
   transition:transform .3s cubic-bezier(.34,1.5,.5,1);
 }
+
+/* when it was made, stamped on like a date on a print */
+.stamp{
+  flex:none;
+  font-size:.68rem; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase;
+  white-space:nowrap;
+  color:var(--ink-3);
+  border:2px solid var(--rule);
+  border-radius:999px;
+  padding:.28rem .62rem;
+  transform:rotate(calc(var(--tilt) * -1.5));
+  transition:transform .3s cubic-bezier(.34,1.5,.5,1), color .2s ease, border-color .2s ease;
+}
+.card:hover .stamp{ transform:rotate(0); color:var(--ink-2); border-color:var(--ink-3) }
 .card:hover .sticker{ transform:rotate(0) scale(1.09) }
 
 .card h3{
@@ -391,6 +411,22 @@ const MAKERS = [
 ];
 
 const TILTS = [-1.4, 0.9, -0.6, 1.5, -1.1, 0.5];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const FULL = ['January','February','March','April','May','June',
+              'July','August','September','October','November','December'];
+
+/* Read the calendar date straight off the ISO string rather than through a
+   Date, so a project committed just after midnight keeps the day it was
+   actually made instead of shifting a day in another timezone. */
+function stamp(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? ''));
+  if (!m) return '';
+  const [, y, mo, d] = m;
+  const i = Number(mo) - 1;
+  if (!MONTHS[i]) return '';
+  return `<time class="stamp" datetime="${y}-${mo}-${d}"`
+    + ` title="Made ${Number(d)} ${FULL[i]} ${y}">${Number(d)} ${MONTHS[i]} ${y}</time>`;
+}
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => (
   { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]
 ));
@@ -424,7 +460,10 @@ function card(p, maker, i){
   const source = `https://github.com/majest/${maker.repo}/tree/main/projects/${encodeURIComponent(p.slug)}`;
   return `
     <article class="card" style="--tilt:${tilt}; --delay:${i * 70}ms">
-      <div class="sticker" aria-hidden="true">${esc(p.emoji || '✨')}</div>
+      <div class="card-top">
+        <div class="sticker" aria-hidden="true">${esc(p.emoji || '✨')}</div>
+        ${stamp(p.added)}
+      </div>
       <h3>${esc(p.title || p.slug)}</h3>
       <p>${esc(p.description || '')}</p>
       <div class="actions">
