@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Wonderful Things — made by Alan &amp; Adam</title>
+<title>Wonderful Things — made by Alan, Adam &amp; Artur</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="A gallery of things Alan and Adam have built with Claude. Everything runs right in your browser.">
+<meta name="description" content="A gallery of things Alan, Adam and Artur have built with Claude. Everything runs right in your browser.">
 <meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -378,7 +378,8 @@ footer .dot{ color:var(--rule) }
     <p class="kicker">An exhibition of</p>
     <h1>Wonderful <em>Things</em></h1>
     <p class="lede">
-      <strong>Alan</strong> and <strong>Adam</strong> make these with Claude.
+      <strong>Alan</strong>, <strong>Adam</strong> and <strong>Artur</strong> make
+      these with Claude.
       Every one of them runs right here in your browser — pick one and have a play.
     </p>
   </div>
@@ -392,10 +393,11 @@ footer .dot{ color:var(--rule) }
 
 <footer>
   <div class="wrap">
-    <span>Built by Alan and Adam, with Claude.</span>
+    <span>Built by Alan, Adam and Artur, with Claude.</span>
     <span class="dot">✦</span>
     <a href="https://github.com/majest/claude-alan">Alan's code</a>
     <a href="https://github.com/majest/claude-adam">Adam's code</a>
+    <a href="https://github.com/majest/claude-artur">Artur's code</a>
   </div>
 </footer>
 
@@ -406,8 +408,9 @@ footer .dot{ color:var(--rule) }
    ----------------------------------------------------------------- */
 
 const MAKERS = [
-  { name:'Alan', repo:'claude-alan', ink:'var(--blue)'  },
-  { name:'Adam', repo:'claude-adam', ink:'var(--green)' },
+  { name:'Alan',  repo:'claude-alan',  ink:'var(--blue)'   },
+  { name:'Adam',  repo:'claude-adam',  ink:'var(--green)'  },
+  { name:'Artur', repo:'claude-artur', ink:'var(--orange)' },
 ];
 
 const TILTS = [-1.4, 0.9, -0.6, 1.5, -1.1, 0.5];
@@ -446,7 +449,7 @@ const wall = document.getElementById('wall');
 wall.innerHTML = MAKERS.map(m => `
   <section class="shelf" id="shelf-${m.repo}" style="--ink-badge:${m.ink}">
     <div class="shelf-head">
-      <span class="badge" style="--tilt:${m.name === 'Alan' ? '-1.8deg' : '1.6deg'}">${m.name}</span>
+      <span class="badge" style="--tilt:${['-1.8deg','1.6deg','-1.1deg'][MAKERS.indexOf(m) % 3]}">${m.name}</span>
       <span class="count" data-count>loading…</span>
     </div>
     <div class="grid" data-grid style="--cols:3">
