@@ -410,7 +410,14 @@ footer .dot{ color:var(--rule) }
 const MAKERS = [
   { name:'Alan',  repo:'claude-alan',  ink:'var(--blue)'   },
   { name:'Adam',  repo:'claude-adam',  ink:'var(--green)'  },
-  { name:'Artur', repo:'claude-artur', ink:'var(--orange)' },
+  { name:'Artur', repo:'claude-artur', ink:'var(--orange)', extra:[
+      // Rzeczy, ktore zyja poza repozytorium projektow. Wpisane recznie, bo
+      // nie ma repo z projects.json. source:null znaczy kod zamkniety, wiec
+      // karta swiadomie nie pokaze linku do kodu.
+      { slug:'picted', title:'Picted', emoji:'🗿', added:'2026-09-16',
+        url:'/picted/', source:null,
+        description:'Upload a few photos of an object and get a 3D model you can spin and download. Computed on a real graphics card, so there is sometimes a queue.' },
+  ]},
 ];
 
 const TILTS = [-1.4, 0.9, -0.6, 1.5, -1.1, 0.5];
@@ -471,7 +478,8 @@ function card(p, maker, i){
       <p>${esc(p.description || '')}</p>
       <div class="actions">
         <a class="open" href="${esc(safeUrl(p.url))}">Open it <span>→</span></a>
-        <a class="code" href="${esc(safeUrl(p.source || source))}">See the code</a>
+          ${p.source === null ? ''
+            : `<a class="code" href="${esc(safeUrl(p.source || source))}">See the code</a>`}
       </div>
     </article>`;
 }
@@ -492,6 +500,12 @@ MAKERS.forEach(async maker => {
     if (res.ok) projects = (await res.json()).projects;
   } catch (e) { /* offline, or the page isn't published yet */ }
 
+    // Wpisy kurowane dokladamy zawsze — nie zaleza od tego, czy repo
+    // zdazylo cokolwiek opublikowac.
+    const dodatkowe = maker.extra || [];
+    if (projects) projects = projects.concat(dodatkowe);
+    else if (dodatkowe.length) projects = dodatkowe.slice();
+
   if (!projects){
     count.textContent = '';
     grid.style.setProperty('--cols', 2);
@@ -507,6 +521,7 @@ MAKERS.forEach(async maker => {
     return;
   }
 
+  projects.sort((a, b) => String(b.added || '').localeCompare(String(a.added || '')));
   count.textContent = projects.length === 1 ? '1 project' : `${projects.length} projects`;
   grid.style.setProperty('--cols', Math.min(projects.length, 4));
   grid.innerHTML = projects.map((p, i) => card(p, maker, i)).join('');
