@@ -385,10 +385,15 @@ $('go').addEventListener('click', async () => {
 });
 
 /* ---- pilnowanie miejsca w kolejce ---- */
+let bledowPodrzad = 0;
+
 async function pilnuj(){
   if (!zadanie) return;
   try {
-    const z = await (await fetch(API + '/publiczne/zadanie?id=' + encodeURIComponent(zadanie), { cache:'no-store' })).json();
+    const odp = await fetch(API + '/publiczne/zadanie?id=' + encodeURIComponent(zadanie), { cache:'no-store' });
+    if (!odp.ok) throw new Error('HTTP ' + odp.status);
+    const z = await odp.json();
+    bledowPodrzad = 0;
 
     if (z.stan === 'czeka'){
       $('numer').textContent = z.miejsce != null ? '#' + z.miejsce : '…';
@@ -413,7 +418,18 @@ async function pilnuj(){
       zadanie = null; odswiezPrzycisk();
       return;
     }
-  } catch (e) { /* sieć mogła mrugnąć — próbujemy dalej */ }
+  } catch (e) {
+    // Sieć może mrugnąć, więc kilka prób wybaczamy. Ale pętlenie się bez
+    // słowa jest gorsze niż błąd: tak wyglądał endpoint zwracający 500 —
+    // strona stała na „Wysyłam zdjęcia 1/1" i nic nie mówiła.
+    if (++bledowPodrzad >= 4){
+      powiedz('Straciłem kontakt ze zleceniem (' + esc(String(e.message || e)) +
+              '). Model może i tak się zrobić — odśwież stronę za chwilę ' +
+              'i zajrzyj do galerii.', 'bad');
+      zadanie = null; odswiezPrzycisk();
+      return;
+    }
+  }
   setTimeout(pilnuj, 5000);
 }
 
