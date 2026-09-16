@@ -161,7 +161,7 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
 <main class="wrap">
 
   <section class="panel" id="panel">
-    <h2>Zrób model</h2>
+    <h2>Wygeneruj model</h2>
 
     <div class="row">
       <div>
@@ -192,7 +192,7 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
     <div class="msg" id="msg">Sprawdzam, czy usługa jest dostępna…</div>
 
     <p style="margin:1.2rem 0 0">
-      <button class="go" id="go" disabled>Policz model</button>
+      <button class="go" id="go" disabled>Generuj model</button>
     </p>
   </section>
 
@@ -201,7 +201,7 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
       Co zrobili inni
     </h2>
     <p style="color:var(--ink-2);margin:.4rem 0 0">
-      Wszystko, co ktokolwiek tu policzył — zostaje na stałe. Kliknij, żeby obrócić.
+      Wszystko, co ktokolwiek tu wygenerował — zostaje na stałe. Kliknij, żeby obrócić.
     </p>
     <div class="galeria" id="galeria"></div>
   </section>
@@ -211,8 +211,8 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
 <div class="rule" aria-hidden="true"></div>
 
 <footer class="wrap">
-  Liczone na prawdziwej karcie graficznej, nie wynajętej w chmurze — dlatego
-  bywa kolejka. Każdy policzony model zostaje tutaj, w galerii wyżej.
+  Generowane na prawdziwej karcie graficznej, nie wynajętej w chmurze —
+  dlatego bywa kolejka. Każdy wygenerowany model zostaje tutaj, w galerii wyżej.
 </footer>
 
 <dialog id="okno">
@@ -231,7 +231,7 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
    Publiczna wersja Picted. Bez logowania, więc limit jest globalny i dzienny,
    a nie na użytkownika. Strona ma działać także wtedy, gdy backend jeszcze nie
    stoi albo domowy komputer śpi — wtedy pokazuje galerię i mówi wprost, że
-   liczenie jest chwilowo wyłączone, zamiast udawać, że działa.
+   generowanie jest chwilowo wyłączone, zamiast udawać, że działa.
    ------------------------------------------------------------------------- */
 
 const API = window.PICTED_API ||
@@ -314,7 +314,7 @@ function odswiezPrzycisk(){
 /* ---- stan usługi ---- */
 async function sprawdzStan(){
   if (!API){
-    powiedz('Liczenie nowych modeli jeszcze nie jest włączone. ' +
+    powiedz('Generowanie nowych modeli jeszcze nie jest włączone. ' +
             'Galeria niżej działa — zajrzyj później.');
     return;
   }
@@ -322,7 +322,7 @@ async function sprawdzStan(){
     const r = await fetch(API + '/publiczne/stan', { cache: 'no-store' });
     const s = await r.json();
     if (!s.wlaczone){
-      powiedz('Liczenie jest teraz wyłączone. Galeria niżej działa.');
+      powiedz('Generowanie jest teraz wyłączone. Galeria niżej działa.');
     } else if (s.zostalo <= 0){
       powiedz('Dzisiejszy limit się wyczerpał — <b>wróć jutro</b>. Galeria niżej działa.');
     } else {
@@ -386,11 +386,11 @@ async function pilnuj(){
       $('pasek').style.width = '8%';
       powiedz(z.miejsce === 1
         ? 'Jesteś następny w kolejce.'
-        : 'Miejsce w kolejce: <b>' + z.miejsce + '</b>. Jedno liczenie trwa parę minut.');
+        : 'Miejsce w kolejce: <b>' + z.miejsce + '</b>. Jedno generowanie trwa parę minut.');
     } else if (z.stan === 'liczy'){
       $('numer').textContent = '↻';
       $('pasek').style.width = (z.postep || 40) + '%';
-      powiedz('Liczę Twój model…');
+      powiedz('Generuję Twój model…');
     } else if (z.stan === 'gotowe'){
       $('numer').textContent = '✓';
       $('pasek').style.width = '100%';
@@ -400,7 +400,7 @@ async function pilnuj(){
       return;
     } else if (z.stan === 'blad'){
       $('numer').textContent = '✗';
-      powiedz('Nie udało się policzyć: ' + esc(z.powod || 'nieznany powód') + '.', 'bad');
+      powiedz('Nie udało się wygenerować: ' + esc(z.powod || 'nieznany powód') + '.', 'bad');
       zadanie = null; odswiezPrzycisk();
       return;
     }
