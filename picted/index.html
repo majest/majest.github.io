@@ -234,7 +234,8 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
    liczenie jest chwilowo wyłączone, zamiast udawać, że działa.
    ------------------------------------------------------------------------- */
 
-const API = window.PICTED_API || '';        // ustawiane przy wdrożeniu backendu
+const API = window.PICTED_API ||
+  'https://5tx2yrowsk.execute-api.eu-central-1.amazonaws.com';
 const MAKS_ZDJEC = 3;
 const MAKS_BAJTOW = 10 * 1024 * 1024;
 
