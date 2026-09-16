@@ -164,6 +164,24 @@ dialog::backdrop{background:rgba(20,16,12,.72)}
 .stopka-dialog{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem;border-top:2px solid var(--ink);flex-wrap:wrap}
 .zamknij{font:inherit;font-weight:700;border:2px solid var(--ink);border-radius:999px;background:var(--paper);color:var(--ink);padding:.4rem 1rem;cursor:pointer}
 
+/* Jasnosc modelu. Domyslna wartosc pasuje do wiekszosci, ale ciemne albo
+   bardzo biale modele wygladaja lepiej przy innej — wiec niech kazdy
+   ustawi sobie sam. Wybor zostaje na nastepny raz. */
+.jasnosc{display:flex;align-items:center;gap:.5rem;color:var(--ink-3);font-size:.78rem;
+  font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.jasnosc input[type=range]{
+  -webkit-appearance:none;appearance:none;width:110px;height:6px;border-radius:999px;
+  background:linear-gradient(90deg,var(--rule),var(--orange));outline:none;cursor:pointer;
+}
+.jasnosc input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:var(--paper);border:2px solid var(--ink);cursor:pointer;
+}
+.jasnosc input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--paper);
+  border:2px solid var(--ink);cursor:pointer;
+}
+
 footer{padding:3rem 0 4rem;color:var(--ink-3);font-size:.88rem}
 footer a{color:var(--ink-2);border-bottom:2px solid var(--rule);text-decoration:none}
 footer a:hover{color:var(--ink);border-color:var(--orange)}
@@ -251,6 +269,10 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
   </div>
   <div class="stopka-dialog">
     <span id="podpis"></span>
+    <label class="jasnosc" title="Jasność podglądu">
+      Jasność
+      <input type="range" id="jasnosc" min="0.35" max="1.7" step="0.05" value="0.85">
+    </label>
     <span>
       <a class="zamknij" id="pobierz" download>Pobierz GLB</a>
       <button class="zamknij" id="zamknij">Zamknij</button>
@@ -495,6 +517,23 @@ async function wczytajGalerie(){
 }
 const pusto = t => `<div style="grid-column:1/-1;padding:2rem;border:3px dashed var(--rule);border-radius:16px;text-align:center;color:var(--ink-2)">${t}</div>`;
 
+/* ---- jasność podglądu, zapamiętywana między wizytami ---- */
+const JASNOSC_DOMYSLNA = 0.85;
+
+function zapamietanaJasnosc(){
+  try {
+    const v = parseFloat(localStorage.getItem('picted-jasnosc'));
+    return Number.isFinite(v) && v >= 0.35 && v <= 1.7 ? v : JASNOSC_DOMYSLNA;
+  } catch (e) { return JASNOSC_DOMYSLNA; }
+}
+
+$('jasnosc').value = zapamietanaJasnosc();
+$('jasnosc').addEventListener('input', e => {
+  const v = parseFloat(e.target.value);
+  if (trzy) trzy.jasnosc(v);          // od razu, bez czekania na przeładowanie
+  try { localStorage.setItem('picted-jasnosc', String(v)); } catch (err) {}
+});
+
 /* ---- podgląd 3D: three.js ładowany dopiero przy pierwszym kliknięciu ---- */
 let trzy = null;
 async function pokaz(glb, nick){
@@ -518,7 +557,7 @@ async function zbudujPodglad(){
   // plaska plama. ACES z ekspozycja ponizej jedynki trzyma swiatla w ryzach.
   if (THREE.sRGBEncoding !== undefined) r.outputEncoding = THREE.sRGBEncoding;
   r.toneMapping = THREE.ACESFilmicToneMapping;
-  r.toneMappingExposure = 0.85;
+  r.toneMappingExposure = zapamietanaJasnosc();
 
   const scena = new THREE.Scene();
   const kam = new THREE.PerspectiveCamera(45, 4/3, .01, 100);
@@ -534,6 +573,7 @@ async function zbudujPodglad(){
   new ResizeObserver(zmien).observe(c); zmien();
   (function petla(){ requestAnimationFrame(petla); ster.update(); r.render(scena, kam); })();
   return {
+    jasnosc(v){ r.toneMappingExposure = v; },
     zaladuj(url){
       if (obiekt) { scena.remove(obiekt); obiekt = null; }
       const nakladka = document.getElementById('ladowanie');
