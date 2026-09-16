@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Picted — model 3D ze zdjęć</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Wgraj kilka zdjęć przedmiotu i dostań model 3D. Bez logowania, za darmo.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..900,0..100,0..1&family=Karla:wght@400;500;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BF%3C/text%3E%3C/svg%3E">
+
+<style>
+:root{
+  --pink:#FF48B0; --blue:#0078BF; --green:#00A95C; --yellow:#FFC800; --orange:#FF6C2F;
+  --paper:#FBF3E4; --ink:#241D18; --ink-2:#6B5D50; --ink-3:#9C8B7A;
+  --rule:#DCCDB2; --card:#FFFBF2; --shadow:rgba(36,29,24,.20);
+  --grain:.24;
+  --display:'Fraunces','Hoefler Text',Georgia,serif;
+  --body:'Karla','Trebuchet MS',Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#181A23; --ink:#F4ECDD; --ink-2:#B0A899; --ink-3:#7E786C;
+    --rule:#33374A; --card:#20232E; --shadow:rgba(0,0,0,.55); --grain:.18;
+  }
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;overflow-x:clip}
+body{
+  margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);
+  font-size:clamp(16px,.5vw+14.6px,17px);line-height:1.6;overflow-x:clip;position:relative;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:9;
+  opacity:var(--grain);mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{width:min(1080px,92vw);margin-inline:auto}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:4px}
+
+/* ---------- nagłówek ---------- */
+header{padding:clamp(2.5rem,6vw,4.5rem) 0 clamp(1.5rem,3vw,2.5rem)}
+.back{
+  display:block;width:max-content;margin-bottom:1.2rem;font-weight:700;font-size:.8rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);text-decoration:none;
+  border-bottom:2px solid var(--rule);padding-bottom:2px;
+}
+.back:hover{color:var(--ink);border-color:var(--orange)}
+h1{
+  margin:0;font-family:var(--display);font-variation-settings:'SOFT' 50,'WONK' 1,'opsz' 144;
+  font-weight:900;font-size:clamp(2.6rem,8vw,5rem);line-height:.9;letter-spacing:-.025em;
+  display:inline-block;transform:rotate(-1.2deg);text-shadow:.045em .035em 0 var(--orange);
+}
+.lede{max-width:50ch;margin:1.3rem 0 0;color:var(--ink-2);font-size:1.05rem}
+.rule{height:26px;opacity:.10;background-image:radial-gradient(circle at center,var(--ink) 1.6px,transparent 1.7px);background-size:11px 11px}
+
+/* ---------- panel ---------- */
+.panel{
+  background:var(--card);border:2px solid var(--ink);border-radius:20px;
+  box-shadow:6px 7px 0 var(--orange);padding:clamp(1.4rem,3vw,2rem);margin:clamp(2rem,4vw,3rem) 0;
+}
+.panel h2{
+  margin:0 0 1rem;font-family:var(--display);font-variation-settings:'SOFT' 60,'WONK' 1;
+  font-weight:800;font-size:1.5rem;line-height:1.1;
+}
+label{display:block;font-weight:700;font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.4rem}
+input[type=text],select{
+  width:100%;font:inherit;color:var(--ink);background:var(--paper);
+  border:2px solid var(--rule);border-radius:12px;padding:.6rem .8rem;
+}
+input[type=text]:focus,select:focus{border-color:var(--orange);outline:none}
+.row{display:grid;gap:1rem 1.2rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:1.2rem}
+
+.drop{
+  border:3px dashed var(--rule);border-radius:16px;padding:1.6rem 1rem;text-align:center;
+  color:var(--ink-2);cursor:pointer;transition:border-color .2s,background .2s;
+}
+.drop:hover,.drop.over{border-color:var(--orange);background:rgba(255,108,47,.06)}
+.drop strong{display:block;font-family:var(--display);font-weight:800;font-size:1.1rem;color:var(--ink);margin-bottom:.2rem}
+.drop small{color:var(--ink-3)}
+#plik{display:none}
+
+.thumbs{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+.thumb{position:relative;width:76px;height:76px;border-radius:12px;overflow:hidden;border:2px solid var(--ink)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{
+  position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;
+  border:2px solid var(--ink);background:var(--paper);color:var(--ink);
+  font-size:11px;line-height:1;cursor:pointer;padding:0;
+}
+
+.go{
+  font:inherit;font-weight:700;font-size:1rem;padding:.7rem 1.4rem;cursor:pointer;
+  border:2px solid var(--ink);border-radius:999px;background:var(--yellow);color:#241D18;
+  box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s;
+}
+.go:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.go:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.go:disabled{opacity:.45;cursor:not-allowed;box-shadow:3px 3px 0 var(--rule);border-color:var(--rule)}
+
+.msg{margin-top:1rem;padding:.8rem 1rem;border-radius:12px;border:2px solid var(--rule);color:var(--ink-2);font-size:.95rem}
+.msg.bad{border-color:var(--pink);color:var(--ink)}
+.msg.ok{border-color:var(--green)}
+.msg b{color:var(--ink)}
+
+/* ---------- kolejka ---------- */
+.kolejka{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:1rem}
+.numer{
+  font-family:var(--display);font-variation-settings:'SOFT' 70,'WONK' 1;font-weight:900;
+  font-size:2.6rem;line-height:1;color:var(--orange);
+}
+.pasek{flex:1;min-width:160px;height:10px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--paper)}
+.pasek i{display:block;height:100%;background:var(--orange);width:0;transition:width .6s ease}
+
+/* ---------- galeria ---------- */
+.galeria{display:grid;gap:1.2rem;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));margin:1.5rem 0 0}
+.model{
+  background:var(--card);border:2px solid var(--ink);border-radius:16px;overflow:hidden;
+  box-shadow:4px 5px 0 var(--shadow);cursor:pointer;transition:transform .2s,box-shadow .2s;
+}
+.model:hover{transform:translateY(-4px);box-shadow:7px 9px 0 var(--shadow)}
+.model .pod{aspect-ratio:1;background:var(--paper);display:grid;place-items:center;font-size:2.4rem;border-bottom:2px solid var(--ink)}
+.model .pod img{width:100%;height:100%;object-fit:cover}
+.model .opis{padding:.7rem .85rem}
+.model .nick{font-weight:700;font-size:.95rem}
+.model .kiedy{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:.15rem}
+
+/* ---------- podgląd 3D ---------- */
+dialog{
+  border:2px solid var(--ink);border-radius:20px;background:var(--card);color:var(--ink);
+  padding:0;width:min(760px,94vw);box-shadow:8px 10px 0 var(--shadow);
+}
+dialog::backdrop{background:rgba(20,16,12,.72)}
+.pod3d{width:100%;aspect-ratio:4/3;background:var(--paper);display:block}
+.stopka-dialog{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem;border-top:2px solid var(--ink);flex-wrap:wrap}
+.zamknij{font:inherit;font-weight:700;border:2px solid var(--ink);border-radius:999px;background:var(--paper);color:var(--ink);padding:.4rem 1rem;cursor:pointer}
+
+footer{padding:3rem 0 4rem;color:var(--ink-3);font-size:.88rem}
+footer a{color:var(--ink-2);border-bottom:2px solid var(--rule);text-decoration:none}
+footer a:hover{color:var(--ink);border-color:var(--orange)}
+
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <a class="back" href="/">&larr; Wonderful Things</a>
+  <h1>Picted</h1>
+  <p class="lede">
+    Wgraj kilka zdjęć przedmiotu z różnych stron — dostaniesz model 3D, który
+    możesz obrócić i pobrać. Bez konta, bez logowania, za darmo.
+  </p>
+</header>
+
+<div class="rule" aria-hidden="true"></div>
+
+<main class="wrap">
+
+  <section class="panel" id="panel">
+    <h2>Zrób model</h2>
+
+    <div class="row">
+      <div>
+        <label for="nick">Twój nick</label>
+        <input type="text" id="nick" maxlength="24" placeholder="np. kasia42" autocomplete="off">
+      </div>
+      <div>
+        <label for="jakosc">Jakość</label>
+        <select id="jakosc">
+          <option value="szybko">Szybko — mniej dokładnie</option>
+          <option value="dobrze" selected>Dobrze — dłużej czeka</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="drop" id="drop" role="button" tabindex="0">
+      <strong>Wybierz zdjęcia</strong>
+      <small>albo przeciągnij tutaj · do <span id="maks">3</span> zdjęć · po maks. 10 MB</small>
+    </div>
+    <input type="file" id="plik" accept="image/*" multiple>
+    <div class="thumbs" id="thumbs"></div>
+
+    <div class="kolejka" id="kolejka" hidden>
+      <div class="numer" id="numer">—</div>
+      <div class="pasek"><i id="pasek"></i></div>
+    </div>
+
+    <div class="msg" id="msg">Sprawdzam, czy usługa jest dostępna…</div>
+
+    <p style="margin:1.2rem 0 0">
+      <button class="go" id="go" disabled>Policz model</button>
+    </p>
+  </section>
+
+  <section>
+    <h2 style="font-family:var(--display);font-variation-settings:'SOFT' 60,'WONK' 1;font-weight:800;font-size:1.6rem;margin:0">
+      Co zrobili inni
+    </h2>
+    <p style="color:var(--ink-2);margin:.4rem 0 0">
+      Wszystko, co ktokolwiek tu policzył. Kliknij, żeby obrócić.
+    </p>
+    <div class="galeria" id="galeria"></div>
+  </section>
+
+</main>
+
+<div class="rule" aria-hidden="true"></div>
+
+<footer class="wrap">
+  Liczone na prawdziwej karcie graficznej, nie wynajętej w chmurze —
+  dlatego bywa kolejka. Pełna wersja z historią modeli:
+  <a href="https://flowic.io/picted/">flowic.io/picted</a>.
+</footer>
+
+<dialog id="okno">
+  <canvas class="pod3d" id="pod3d"></canvas>
+  <div class="stopka-dialog">
+    <span id="podpis"></span>
+    <span>
+      <a class="zamknij" id="pobierz" download>Pobierz GLB</a>
+      <button class="zamknij" id="zamknij">Zamknij</button>
+    </span>
+  </div>
+</dialog>
+
+<script>
+/* -------------------------------------------------------------------------
+   Publiczna wersja Picted. Bez logowania, więc limit jest globalny i dzienny,
+   a nie na użytkownika. Strona ma działać także wtedy, gdy backend jeszcze nie
+   stoi albo domowy komputer śpi — wtedy pokazuje galerię i mówi wprost, że
+   liczenie jest chwilowo wyłączone, zamiast udawać, że działa.
+   ------------------------------------------------------------------------- */
+
+const API = window.PICTED_API || '';        // ustawiane przy wdrożeniu backendu
+const MAKS_ZDJEC = 3;
+const MAKS_BAJTOW = 10 * 1024 * 1024;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let wybrane = [];
+let zadanie = null;
+
+/* ---- nick pamiętany lokalnie, żeby nie wpisywać za każdym razem ---- */
+try { $('nick').value = localStorage.getItem('picted-nick') || ''; } catch (e) {}
+$('nick').addEventListener('change', () => {
+  try { localStorage.setItem('picted-nick', $('nick').value.trim()); } catch (e) {}
+});
+
+function powiedz(tekst, rodzaj){
+  const m = $('msg');
+  m.className = 'msg' + (rodzaj ? ' ' + rodzaj : '');
+  m.innerHTML = tekst;
+}
+
+/* ---- wybór zdjęć ---- */
+$('maks').textContent = MAKS_ZDJEC;
+$('drop').addEventListener('click', () => $('plik').click());
+$('drop').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('plik').click(); } });
+$('drop').addEventListener('dragover', e => { e.preventDefault(); $('drop').classList.add('over'); });
+$('drop').addEventListener('dragleave', () => $('drop').classList.remove('over'));
+$('drop').addEventListener('drop', e => {
+  e.preventDefault(); $('drop').classList.remove('over');
+  dodaj([...e.dataTransfer.files]);
+});
+$('plik').addEventListener('change', e => dodaj([...e.target.files]));
+
+function dodaj(pliki){
+  for (const p of pliki){
+    if (!p.type.startsWith('image/')) { powiedz('To nie jest zdjęcie: <b>' + esc(p.name) + '</b>', 'bad'); continue; }
+    if (p.size > MAKS_BAJTOW) { powiedz('Za duże zdjęcie: <b>' + esc(p.name) + '</b> — maks. 10 MB.', 'bad'); continue; }
+    if (wybrane.length >= MAKS_ZDJEC) { powiedz('Najwyżej ' + MAKS_ZDJEC + ' zdjęcia.', 'bad'); break; }
+    wybrane.push(p);
+  }
+  rysujThumbs();
+}
+
+function rysujThumbs(){
+  $('thumbs').innerHTML = '';
+  wybrane.forEach((p, i) => {
+    const d = document.createElement('div');
+    d.className = 'thumb';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(p);
+    img.onload = () => URL.revokeObjectURL(img.src);
+    const b = document.createElement('button');
+    b.textContent = '×'; b.title = 'usuń';
+    b.onclick = ev => { ev.stopPropagation(); wybrane.splice(i, 1); rysujThumbs(); odswiezPrzycisk(); };
+    d.append(img, b);
+    $('thumbs').append(d);
+  });
+  odswiezPrzycisk();
+}
+
+function odswiezPrzycisk(){
+  $('go').disabled = !API || wybrane.length === 0 || zadanie !== null;
+}
+
+/* ---- stan usługi ---- */
+async function sprawdzStan(){
+  if (!API){
+    powiedz('Liczenie nowych modeli jeszcze nie jest włączone na tej stronie. ' +
+            'Galeria niżej działa — a pełna wersja jest na ' +
+            '<a href="https://flowic.io/picted/">flowic.io/picted</a>.');
+    return;
+  }
+  try {
+    const r = await fetch(API + '/publiczne/stan', { cache: 'no-store' });
+    const s = await r.json();
+    if (!s.wlaczone){
+      powiedz('Liczenie jest teraz wyłączone. Galeria niżej działa.');
+    } else if (s.zostalo <= 0){
+      powiedz('Dzisiejszy limit się wyczerpał — <b>wróć jutro</b>. Galeria niżej działa.');
+    } else {
+      powiedz('Zostało dziś <b>' + s.zostalo + '</b> z ' + s.limit + ' modeli. ' +
+              (s.wKolejce ? 'W kolejce: <b>' + s.wKolejce + '</b>.' : 'Kolejka pusta.'), 'ok');
+    }
+  } catch (e) {
+    powiedz('Nie mogę sprawdzić, czy usługa działa. Galeria niżej powinna działać.');
+  }
+  odswiezPrzycisk();
+}
+
+/* ---- wysyłka ---- */
+$('go').addEventListener('click', async () => {
+  const nick = $('nick').value.trim();
+  if (!nick){ powiedz('Wpisz nick — pokaże się przy Twoim modelu w galerii.', 'bad'); $('nick').focus(); return; }
+  $('go').disabled = true;
+  powiedz('Wysyłam zdjęcia…');
+
+  try {
+    const start = await (await fetch(API + '/publiczne/start', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        nick,
+        jakosc: $('jakosc').value,
+        zdjecia: wybrane.map(p => ({ nazwa: p.name, typ: p.type, rozmiar: p.size })),
+      }),
+    })).json();
+
+    if (start.blad){ powiedz(esc(start.blad), 'bad'); $('go').disabled = false; return; }
+
+    for (let i = 0; i < wybrane.length; i++){
+      await fetch(start.wysylki[i].adres, {
+        method: 'PUT', headers: { 'content-type': wybrane[i].type }, body: wybrane[i],
+      });
+      powiedz('Wysyłam zdjęcia… ' + (i + 1) + '/' + wybrane.length);
+    }
+
+    await fetch(API + '/publiczne/gotowe', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: start.id }),
+    });
+
+    zadanie = start.id;
+    $('kolejka').hidden = false;
+    pilnuj();
+  } catch (e) {
+    powiedz('Coś poszło nie tak przy wysyłce. Spróbuj jeszcze raz.', 'bad');
+    $('go').disabled = false;
+  }
+});
+
+/* ---- pilnowanie miejsca w kolejce ---- */
+async function pilnuj(){
+  if (!zadanie) return;
+  try {
+    const z = await (await fetch(API + '/publiczne/zadanie?id=' + encodeURIComponent(zadanie), { cache:'no-store' })).json();
+
+    if (z.stan === 'czeka'){
+      $('numer').textContent = z.miejsce != null ? '#' + z.miejsce : '…';
+      $('pasek').style.width = '8%';
+      powiedz(z.miejsce === 1
+        ? 'Jesteś następny w kolejce.'
+        : 'Miejsce w kolejce: <b>' + z.miejsce + '</b>. Jedno liczenie trwa parę minut.');
+    } else if (z.stan === 'liczy'){
+      $('numer').textContent = '↻';
+      $('pasek').style.width = (z.postep || 40) + '%';
+      powiedz('Liczę Twój model…');
+    } else if (z.stan === 'gotowe'){
+      $('numer').textContent = '✓';
+      $('pasek').style.width = '100%';
+      powiedz('Gotowe. Model jest w galerii niżej.', 'ok');
+      zadanie = null; wybrane = []; rysujThumbs();
+      wczytajGalerie();
+      return;
+    } else if (z.stan === 'blad'){
+      $('numer').textContent = '✗';
+      powiedz('Nie udało się policzyć: ' + esc(z.powod || 'nieznany powód') + '.', 'bad');
+      zadanie = null; odswiezPrzycisk();
+      return;
+    }
+  } catch (e) { /* sieć mogła mrugnąć — próbujemy dalej */ }
+  setTimeout(pilnuj, 5000);
+}
+
+/* ---- galeria ---- */
+async function wczytajGalerie(){
+  const g = $('galeria');
+  if (!API){ g.innerHTML = pusto('Galeria pojawi się, gdy usługa ruszy.'); return; }
+  try {
+    const lista = (await (await fetch(API + '/publiczne/galeria', { cache:'no-store' })).json()).modele || [];
+    if (!lista.length){ g.innerHTML = pusto('Jeszcze nikt nic nie zrobił. Bądź pierwszy.'); return; }
+    g.innerHTML = lista.map(m => `
+      <article class="model" data-glb="${esc(m.glb)}" data-nick="${esc(m.nick)}">
+        <div class="pod">${m.podglad ? `<img src="${esc(m.podglad)}" alt="" loading="lazy">` : '🗿'}</div>
+        <div class="opis">
+          <div class="nick">${esc(m.nick || 'ktoś')}</div>
+          <div class="kiedy">${esc((m.kiedy || '').slice(0, 10))}</div>
+        </div>
+      </article>`).join('');
+    g.querySelectorAll('.model').forEach(el =>
+      el.addEventListener('click', () => pokaz(el.dataset.glb, el.dataset.nick)));
+  } catch (e) {
+    g.innerHTML = pusto('Nie mogę teraz wczytać galerii.');
+  }
+}
+const pusto = t => `<div style="grid-column:1/-1;padding:2rem;border:3px dashed var(--rule);border-radius:16px;text-align:center;color:var(--ink-2)">${t}</div>`;
+
+/* ---- podgląd 3D: three.js ładowany dopiero przy pierwszym kliknięciu ---- */
+let trzy = null;
+async function pokaz(glb, nick){
+  $('podpis').textContent = nick ? 'zrobił(a) ' + nick : '';
+  $('pobierz').href = glb;
+  $('okno').showModal();
+  if (!trzy) trzy = await zbudujPodglad();
+  trzy.zaladuj(glb);
+}
+$('zamknij').addEventListener('click', () => $('okno').close());
+
+async function zbudujPodglad(){
+  await wczytajSkrypt('vendor/three.min.js');
+  await wczytajSkrypt('vendor/GLTFLoader.js');
+  await wczytajSkrypt('vendor/OrbitControls.js');
+  const c = $('pod3d');
+  const r = new THREE.WebGLRenderer({ canvas:c, antialias:true, alpha:true });
+  const scena = new THREE.Scene();
+  const kam = new THREE.PerspectiveCamera(45, 4/3, .01, 100);
+  kam.position.set(0, .4, 2.2);
+  scena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.2));
+  const kier = new THREE.DirectionalLight(0xffffff, 1.4); kier.position.set(2,3,2); scena.add(kier);
+  const ster = new THREE.OrbitControls(kam, c);
+  ster.enableDamping = true;
+  let obiekt = null;
+  const zmien = () => { const w=c.clientWidth||600; r.setSize(w, w*3/4, false); kam.aspect=4/3; kam.updateProjectionMatrix(); };
+  new ResizeObserver(zmien).observe(c); zmien();
+  (function petla(){ requestAnimationFrame(petla); ster.update(); r.render(scena, kam); })();
+  return {
+    zaladuj(url){
+      if (obiekt) { scena.remove(obiekt); obiekt = null; }
+      new THREE.GLTFLoader().load(url, g => {
+        obiekt = g.scene;
+        const pud = new THREE.Box3().setFromObject(obiekt);
+        const rozmiar = pud.getSize(new THREE.Vector3()).length() || 1;
+        obiekt.scale.setScalar(1.6 / rozmiar);
+        const sr = pud.getCenter(new THREE.Vector3()).multiplyScalar(1.6 / rozmiar);
+        obiekt.position.sub(sr);
+        scena.add(obiekt);
+      });
+    },
+  };
+}
+const wczytajSkrypt = src => new Promise((ok, zle) => {
+  if (document.querySelector(`script[src="${src}"]`)) return ok();
+  const s = document.createElement('script');
+  s.src = src; s.onload = ok; s.onerror = zle; document.head.append(s);
+});
+
+sprawdzStan();
+wczytajGalerie();
+</script>
+</body>
+</html>
