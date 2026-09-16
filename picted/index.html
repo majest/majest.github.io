@@ -122,7 +122,21 @@ input[type=text]:focus,select:focus{border-color:var(--orange);outline:none}
   box-shadow:4px 5px 0 var(--shadow);cursor:pointer;transition:transform .2s,box-shadow .2s;
 }
 .model:hover{transform:translateY(-4px);box-shadow:7px 9px 0 var(--shadow)}
-.model .pod{aspect-ratio:1;background:var(--paper);display:grid;place-items:center;font-size:2.4rem;border-bottom:2px solid var(--ink)}
+.model .pod{
+  position:relative;aspect-ratio:1;background:var(--paper);display:grid;place-items:center;
+  font-size:2.4rem;border-bottom:2px solid var(--ink);overflow:hidden;
+}
+/* Miniatury ida z S3 i potrafia chwile zejsc. Zamiast pustego prostokata —
+   delikatne migotanie, ktore znika, gdy obrazek naprawde sie zaladuje. */
+.model .pod::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 20%,rgba(255,108,47,.16) 50%,transparent 80%);
+  background-size:220% 100%;animation:migot 1.3s ease-in-out infinite;
+}
+.model .pod.gotowa::before{display:none}
+@keyframes migot{0%{background-position:120% 0}100%{background-position:-40% 0}}
+.model .pod img{opacity:0;transition:opacity .35s ease}
+.model .pod img.gotowy{opacity:1}
 .model .pod img{width:100%;height:100%;object-fit:cover}
 .model .opis{padding:.7rem .85rem}
 .model .nick{font-weight:700;font-size:.95rem}
@@ -135,6 +149,18 @@ dialog{
 }
 dialog::backdrop{background:rgba(20,16,12,.72)}
 .pod3d{width:100%;aspect-ratio:4/3;background:var(--paper);display:block}
+.ladowanie{
+  position:absolute;inset:0;display:grid;place-items:center;gap:.8rem;
+  background:var(--paper);color:var(--ink-2);font-weight:700;
+}
+.ladowanie[hidden]{display:none}
+.ladowanie .kolo{
+  width:46px;height:46px;border-radius:50%;
+  border:4px solid var(--rule);border-top-color:var(--orange);
+  animation:kreci .8s linear infinite;
+}
+@keyframes kreci{to{transform:rotate(360deg)}}
+.scena{position:relative}
 .stopka-dialog{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem;border-top:2px solid var(--ink);flex-wrap:wrap}
 .zamknij{font:inherit;font-weight:700;border:2px solid var(--ink);border-radius:999px;background:var(--paper);color:var(--ink);padding:.4rem 1rem;cursor:pointer}
 
@@ -216,7 +242,13 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
 </footer>
 
 <dialog id="okno">
-  <canvas class="pod3d" id="pod3d"></canvas>
+  <div class="scena">
+    <canvas class="pod3d" id="pod3d"></canvas>
+    <div class="ladowanie" id="ladowanie">
+      <div class="kolo"></div>
+      <span id="ileProcent">wczytuję model…</span>
+    </div>
+  </div>
   <div class="stopka-dialog">
     <span id="podpis"></span>
     <span>
@@ -444,7 +476,11 @@ async function wczytajGalerie(){
       const glb = bezpiecznyUrl(m.glb), podglad = bezpiecznyUrl(m.podglad);
       return `
       <article class="model" data-glb="${esc(glb)}" data-nick="${esc(m.nick)}">
-        <div class="pod">${podglad ? `<img src="${esc(podglad)}" alt="" loading="lazy">` : '🗿'}</div>
+        <div class="pod${podglad ? '' : ' gotowa'}">${podglad
+          ? `<img src="${esc(podglad)}" alt="" loading="lazy"
+                  onload="this.classList.add('gotowy');this.parentNode.classList.add('gotowa')"
+                  onerror="this.remove();this.parentNode.classList.add('gotowa');this.parentNode.textContent='🗿'">`
+          : '🗿'}</div>
         <div class="opis">
           <div class="nick">${esc(m.nick || 'ktoś')}</div>
           <div class="kiedy">${esc((m.kiedy || '').slice(0, 10))}</div>
@@ -478,11 +514,19 @@ async function zbudujPodglad(){
   await wczytajSkrypt('vendor/OrbitControls.js');
   const c = $('pod3d');
   const r = new THREE.WebGLRenderer({ canvas:c, antialias:true, alpha:true });
+  // Bez tone mappingu jasne modele sie przepalaly — biala ceramika wychodzila
+  // plaska plama. ACES z ekspozycja ponizej jedynki trzyma swiatla w ryzach.
+  if (THREE.sRGBEncoding !== undefined) r.outputEncoding = THREE.sRGBEncoding;
+  r.toneMapping = THREE.ACESFilmicToneMapping;
+  r.toneMappingExposure = 0.85;
+
   const scena = new THREE.Scene();
   const kam = new THREE.PerspectiveCamera(45, 4/3, .01, 100);
   kam.position.set(0, .4, 2.2);
-  scena.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.2));
-  const kier = new THREE.DirectionalLight(0xffffff, 1.4); kier.position.set(2,3,2); scena.add(kier);
+  scena.add(new THREE.HemisphereLight(0xffffff, 0x3a4450, 1.05));
+  const kier = new THREE.DirectionalLight(0xffffff, 0.75); kier.position.set(2,3,2); scena.add(kier);
+  const wypelnienie = new THREE.DirectionalLight(0xffffff, 0.25);
+  wypelnienie.position.set(-2, 1, -2); scena.add(wypelnienie);
   const ster = new THREE.OrbitControls(kam, c);
   ster.enableDamping = true;
   let obiekt = null;
@@ -492,7 +536,13 @@ async function zbudujPodglad(){
   return {
     zaladuj(url){
       if (obiekt) { scena.remove(obiekt); obiekt = null; }
+      const nakladka = document.getElementById('ladowanie');
+      const napis = document.getElementById('ileProcent');
+      nakladka.hidden = false;
+      napis.textContent = 'wczytuję model…';
+
       new THREE.GLTFLoader().load(url, g => {
+        nakladka.hidden = true;
         obiekt = g.scene;
         const pud = new THREE.Box3().setFromObject(obiekt);
         const rozmiar = pud.getSize(new THREE.Vector3()).length() || 1;
@@ -500,6 +550,16 @@ async function zbudujPodglad(){
         const sr = pud.getCenter(new THREE.Vector3()).multiplyScalar(1.6 / rozmiar);
         obiekt.position.sub(sr);
         scena.add(obiekt);
+      }, post => {
+        // Modele potrafia miec kilkanascie megabajtow. Cisza przez pol minuty
+        // wyglada jak zawieszenie, wiec pokazujemy, ile juz zeszlo.
+        if (post.lengthComputable && post.total){
+          napis.textContent = Math.round(post.loaded / post.total * 100) + '%';
+        } else if (post.loaded){
+          napis.textContent = (post.loaded / 1048576).toFixed(1) + ' MB';
+        }
+      }, () => {
+        napis.textContent = 'nie udało się wczytać modelu';
       });
     },
   };
