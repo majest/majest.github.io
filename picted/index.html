@@ -201,7 +201,7 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
       Co zrobili inni
     </h2>
     <p style="color:var(--ink-2);margin:.4rem 0 0">
-      Wszystko, co ktokolwiek tu policzył. Kliknij, żeby obrócić.
+      Wszystko, co ktokolwiek tu policzył — zostaje na stałe. Kliknij, żeby obrócić.
     </p>
     <div class="galeria" id="galeria"></div>
   </section>
@@ -211,9 +211,8 @@ footer a:hover{color:var(--ink);border-color:var(--orange)}
 <div class="rule" aria-hidden="true"></div>
 
 <footer class="wrap">
-  Liczone na prawdziwej karcie graficznej, nie wynajętej w chmurze —
-  dlatego bywa kolejka. Pełna wersja z historią modeli:
-  <a href="https://flowic.io/picted/">flowic.io/picted</a>.
+  Liczone na prawdziwej karcie graficznej, nie wynajętej w chmurze — dlatego
+  bywa kolejka. Każdy policzony model zostaje tutaj, w galerii wyżej.
 </footer>
 
 <dialog id="okno">
@@ -241,6 +240,18 @@ const MAKS_BAJTOW = 10 * 1024 * 1024;
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Galeria przychodzi z API bez logowania, czyli od nieznanych ludzi. Adresy
+   stamtad to dane, nie kod: cokolwiek nie jest zwyklym http(s) - javascript:,
+   data: - nie ma prawa trafic do href ani do src. */
+function bezpiecznyUrl(u){
+  const t = String(u ?? '').trim();
+  if (!t) return '';                      // pusty adres to brak adresu, nie adres tej strony
+  try {
+    const x = new URL(t, location.href);
+    return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : '';
+  } catch { return ''; }
+}
 let wybrane = [];
 let zadanie = null;
 
@@ -302,9 +313,8 @@ function odswiezPrzycisk(){
 /* ---- stan usługi ---- */
 async function sprawdzStan(){
   if (!API){
-    powiedz('Liczenie nowych modeli jeszcze nie jest włączone na tej stronie. ' +
-            'Galeria niżej działa — a pełna wersja jest na ' +
-            '<a href="https://flowic.io/picted/">flowic.io/picted</a>.');
+    powiedz('Liczenie nowych modeli jeszcze nie jest włączone. ' +
+            'Galeria niżej działa — zajrzyj później.');
     return;
   }
   try {
@@ -404,14 +414,17 @@ async function wczytajGalerie(){
   try {
     const lista = (await (await fetch(API + '/publiczne/galeria', { cache:'no-store' })).json()).modele || [];
     if (!lista.length){ g.innerHTML = pusto('Jeszcze nikt nic nie zrobił. Bądź pierwszy.'); return; }
-    g.innerHTML = lista.map(m => `
-      <article class="model" data-glb="${esc(m.glb)}" data-nick="${esc(m.nick)}">
-        <div class="pod">${m.podglad ? `<img src="${esc(m.podglad)}" alt="" loading="lazy">` : '🗿'}</div>
+    g.innerHTML = lista.map(m => {
+      const glb = bezpiecznyUrl(m.glb), podglad = bezpiecznyUrl(m.podglad);
+      return `
+      <article class="model" data-glb="${esc(glb)}" data-nick="${esc(m.nick)}">
+        <div class="pod">${podglad ? `<img src="${esc(podglad)}" alt="" loading="lazy">` : '🗿'}</div>
         <div class="opis">
           <div class="nick">${esc(m.nick || 'ktoś')}</div>
           <div class="kiedy">${esc((m.kiedy || '').slice(0, 10))}</div>
         </div>
-      </article>`).join('');
+      </article>`;
+    }).join('');
     g.querySelectorAll('.model').forEach(el =>
       el.addEventListener('click', () => pokaz(el.dataset.glb, el.dataset.nick)));
   } catch (e) {
@@ -423,11 +436,13 @@ const pusto = t => `<div style="grid-column:1/-1;padding:2rem;border:3px dashed 
 /* ---- podgląd 3D: three.js ładowany dopiero przy pierwszym kliknięciu ---- */
 let trzy = null;
 async function pokaz(glb, nick){
+  const adres = bezpiecznyUrl(glb);
+  if (!adres){ powiedz('Ten model ma nieprawidłowy adres — pomijam.', 'bad'); return; }
   $('podpis').textContent = nick ? 'zrobił(a) ' + nick : '';
-  $('pobierz').href = glb;
+  $('pobierz').href = adres;
   $('okno').showModal();
   if (!trzy) trzy = await zbudujPodglad();
-  trzy.zaladuj(glb);
+  trzy.zaladuj(adres);
 }
 $('zamknij').addEventListener('click', () => $('okno').close());
 
