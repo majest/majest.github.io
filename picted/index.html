@@ -355,9 +355,10 @@ $('go').addEventListener('click', async () => {
     if (start.blad){ powiedz(esc(start.blad), 'bad'); $('go').disabled = false; return; }
 
     for (let i = 0; i < wybrane.length; i++){
-      await fetch(start.wysylki[i].adres, {
+      const w = await fetch(start.wysylki[i].adres, {
         method: 'PUT', headers: { 'content-type': wybrane[i].type }, body: wybrane[i],
       });
+      if (!w.ok) throw new Error('S3 odrzuciło zdjęcie ' + (i + 1) + ': HTTP ' + w.status);
       powiedz('Wysyłam zdjęcia… ' + (i + 1) + '/' + wybrane.length);
     }
 
@@ -370,7 +371,15 @@ $('go').addEventListener('click', async () => {
     $('kolejka').hidden = false;
     pilnuj();
   } catch (e) {
-    powiedz('Coś poszło nie tak przy wysyłce. Spróbuj jeszcze raz.', 'bad');
+    // Mów, co się stało. Samo „coś poszło nie tak" kosztowało już jedno
+    // popołudnie zgadywania: przyczyną był brak CORS na kubełku, czego po
+    // tym komunikacie nie dało się poznać.
+    const czemu = String(e && e.message || e);
+    const siec = /Failed to fetch|NetworkError|Load failed/i.test(czemu);
+    powiedz(siec
+      ? 'Nie udało się wysłać zdjęcia — przeglądarka zablokowała połączenie. ' +
+        'Jeśli to się powtarza, powiedz Arturowi: <b>CORS na kubełku</b>.'
+      : 'Nie udało się wysłać: <b>' + esc(czemu) + '</b>', 'bad');
     $('go').disabled = false;
   }
 });
